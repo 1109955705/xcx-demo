@@ -1,0 +1,11 @@
+<!--pages/home.wxml-->
+<view class="home">
+  <view class="extre" hidden="{{extreHide}}">
+    <view class="back-btn" bindtap="back">返回</view>
+  </view>
+  <view 
+    hidden="{{mainHide}}" 
+    class="main {{mainLeave ? 'main-leave' : ''}} {{mainEnter ? 'main-enter' : ''}}" 
+    bind:transitionend="transitionend">
+  </view>
+</view>

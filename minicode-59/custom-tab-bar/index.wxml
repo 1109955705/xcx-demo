@@ -1,0 +1,10 @@
+<!--custom-tab-bar/index.wxml-->
+<view class="tar-bar" wx:if="{{show}}">
+  <text 
+    wx:for="{{list}}"
+    wx:key="index" 
+    data-path="{{item.pagePath}}"
+    style="color: {{selected === index ? selectedColor : color}}"
+    bindtap="switchTab"
+  >{{item.name}}</text>
+</view>

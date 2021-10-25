@@ -1,0 +1,41 @@
+/* pages/home.wxss */
+.home {
+  box-sizing: border-box;
+  flex-direction: column;
+  width: 100%;
+  height: 100vh;
+}
+
+.extre {
+  width: 100%;
+  height: 100%;
+  background-color: blueviolet;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.back-btn {
+  padding: 10rpx 20rpx;
+  border-radius: 20rpx;
+  border: 1px solid red;
+  color: #ffffff;
+}
+
+.main {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: burlywood;
+  transition: all 2s ease;
+}
+
+.main-leave {
+  transform: translateY(100%);
+}
+
+.main-enter {
+  transform: translateY(0);
+}
