@@ -1,0 +1,5 @@
+<cBar id="c-bar" title="{{title}}" background="linear-gradient(45deg, #39b54a, #8dc63f)"></cBar>
+<view class="container" style="{{mainHeight}}">
+  <view class="intro">hello world！</view>
+  <button class="intro" bindtap="goto">体验监听返回</button>
+</view>

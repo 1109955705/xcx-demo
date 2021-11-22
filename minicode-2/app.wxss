@@ -1,0 +1,19 @@
+page {
+  width: 100vw;
+  height: 100vh;
+  position: relative;
+  overflow: hidden;
+}
+
+.container {
+  width: 100vw;
+  height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+  overflow-y: scroll;
+}
+
+.intro {
+  margin: 30px;
+  text-align: center;
+}

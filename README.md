@@ -1,2 +1,2 @@
 ### minicode-1 下拉出现其它页面的效果
-![image](https://github.com/1109955705/xcx-demo/blob/master/images/minicode-1.gif)
+[minicode-1](https://github.com/1109955705/xcx-demo/blob/master/minicode-1/README.md)

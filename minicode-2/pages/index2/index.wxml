@@ -1,0 +1,8 @@
+<cBar id="c-bar" title="{{title}}" showBack="{{true}}" showHome="{{true}}" background="linear-gradient(45deg, #39b54a, #8dc63f)"></cBar>
+<view class="container" style="{{mainHeight}}">
+  <view class="intro">标题:<input class="input" bindinput="input" value="{{inputval!=''?inputval:''}}" /></view>
+  <view class="intro">内容:<textarea class="textarea" bindinput="textareainput" value="{{textareaval!=''?textareaval:''}}" /></view>
+  <button class="intro" bindtap="save">保存信息</button>
+  <view class="intro">↑↑↑你可以输入一些内容，来测试物理返回事件↑↑↑</view>
+  <view class="intro">点左上角返回或返回主页测试自定义导航返回事件</view>
+</view>

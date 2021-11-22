@@ -1,0 +1,7 @@
+{
+  "enablePullDownRefresh": true,
+  "usingComponents": {
+    "cBar": "/components/cBar/index",
+    "ii": "/components/iconfont/iconfont"
+  }
+}

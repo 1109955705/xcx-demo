@@ -1,0 +1,22 @@
+page {
+  width: 100vw;
+  height: 100vh;
+  position: relative;
+  overflow: hidden;
+}
+
+.container {
+  width: 100vw;
+  height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+  overflow-y: scroll;
+}
+
+.input {
+  border:1px solid #ccc;
+}
+.textarea {
+  width: calc(100vw - 60px);
+  border:1px solid #ccc;
+}
