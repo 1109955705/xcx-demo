@@ -1,12 +1,28 @@
 {
   "pages": [
-    "index/index"
+    "index/index",
+    "test/index"
   ],
   "window": {
     "backgroundTextStyle": "light",
     "navigationBarBackgroundColor": "#fff",
     "navigationBarTitleText": "Weixin",
     "navigationBarTextStyle": "black"
+  },
+  "tabBar": {
+    "custom": false,
+    "color": "#CCCCCC",
+    "selectedColor": "#01ca9e",
+    "list": [
+      {
+        "pagePath": "index/index",
+        "text": "home"
+      },
+      {
+        "pagePath": "test/index",
+        "text": "test"
+      }
+    ]
   },
   "style": "v2",
   "sitemapLocation": "sitemap.json",

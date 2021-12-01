@@ -1,0 +1,10 @@
+canvas
+<view style="background-color:chartreuse; padding: 10px 0;">
+  <canvas class="canvas" style="width: {{ canvasWidth }}px;height: {{ canvasHeight }}px" type="2d" id="canvas"></canvas>
+</view>
+图片
+<view style="background-color: aquamarine; ">
+  <image mode="widthFix" style="width: 70vw;" src="{{ shareFriendsPicture }}"></image>
+</view>
+<button catchtap="onSaveSharePictureClick" type="primary" style="margin-top: 20rpx;">保存图片</button>
+<view style="height: 30vh;"></view>
