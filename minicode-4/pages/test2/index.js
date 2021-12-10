@@ -1,5 +1,6 @@
-const THREE = require("../libs/three.js");
-import * as three from '../libs/three'
+const THREE = require("../../libs/three.js");
+// import * as THREE from '../../libs/three'
+import { OBJLoader } from '../../libs/jsm/loaders/OBJLoader.js';
 const app = getApp();
 Page({
   data: {
@@ -50,7 +51,7 @@ Page({
    * 初始化WebGL场景
    */
   initWebGLScene() {
-    //创建摄像头
+    // 摄像头
     const camera = new THREE.PerspectiveCamera(
       60,
       this._webGLCanvas.width / this._webGLCanvas.height,
@@ -58,11 +59,18 @@ Page({
       1000
     );
     this._camera = camera;
-    //创建场景
+    // 场景
     var scene = new THREE.Scene();
     this._scene = scene;
 
-    //创建Cube几何体
+    // 模型
+    new OBJLoader()
+					.setPath( '../../libs/models/obj/cerberus/' )
+					.load( 'Cerberus.obj', function ( group ) {
+            console.log('xxxxxx', group)
+            const loader = new THREE.TextureLoader()
+            .setPath( 'models/obj/cerberus/' );
+          })
     var cubeGeo = new THREE.BoxGeometry(30, 30, 30);
     //创建材质，设置材质为基本材质（不会反射光线，设置材质颜色为绿色）
     var mat = new THREE.MeshBasicMaterial({ color: 0xCC00FF });

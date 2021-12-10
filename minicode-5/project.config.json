@@ -4,7 +4,7 @@
     "ignore": []
   },
   "setting": {
-    "urlCheck": false,
+    "urlCheck": true,
     "es6": true,
     "enhance": true,
     "postcss": true,
@@ -12,7 +12,7 @@
     "minified": true,
     "newFeature": false,
     "coverView": true,
-    "nodeModules": true,
+    "nodeModules": false,
     "autoAudits": false,
     "showShadowRootInWxmlPanel": true,
     "scopeDataCheck": false,
@@ -30,20 +30,20 @@
       "disablePlugins": [],
       "outputPath": ""
     },
+    "enableEngineNative": false,
     "useIsolateContext": true,
     "userConfirmedBundleSwitch": false,
     "packNpmManually": false,
     "packNpmRelationList": [],
     "minifyWXSS": true,
     "disableUseStrict": false,
-    "minifyWXML": true,
     "showES6CompileOption": false,
     "useCompilerPlugins": false
   },
   "compileType": "miniprogram",
-  "libVersion": "2.21.1",
+  "libVersion": "2.8.3",
   "appid": "wx7330a98260d1f3f0",
-  "projectname": "minicode-4",
+  "projectname": "%E5%B0%8F%E7%A8%8B%E5%BA%8F%E4%BD%BF%E7%94%A8%E7%BA%AF%E5%89%8D%E7%AB%AF%E6%8A%80%E6%9C%AF%E5%B0%86%E6%95%B0%E6%8D%AE%E5%AF%BC%E5%87%BA%E4%B8%BAexcel%E8%A1%A8%E6%A0%BC",
   "debugOptions": {
     "hidedInDevtools": []
   },

@@ -3,6 +3,8 @@
  * Copyright 2010-2021 Three.js Authors
  * SPDX-License-Identifier: MIT
  */
+// const FileLoader = require('./jsm/loaders/FileLoader.js');
+
 (function (global, factory) {
 	typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
 	typeof define === 'function' && define.amd ? define(['exports'], factory) :
@@ -12548,7 +12550,9 @@
 				const extension = getExtension(name);
 
 				if (extension === null) {
+					console.log('xxxxxxxxxxx')
 					console.warn('THREE.WebGLRenderer: ' + name + ' extension not supported.');
+					console.log('xxxxxxxxxxx')
 				}
 
 				return extension;
@@ -15966,12 +15970,8 @@
 			equationToGL[MinEquation] = gl.MIN;
 			equationToGL[MaxEquation] = gl.MAX;
 		} else {
-			const extension = extensions.get('EXT_blend_minmax');
-
-			if (extension !== null) {
-				equationToGL[MinEquation] = extension.MIN_EXT;
-				equationToGL[MaxEquation] = extension.MAX_EXT;
-			}
+			equationToGL[MinEquation] = 0x8007;
+			equationToGL[MaxEquation] = 0x8008;
 		}
 
 		const factorToGL = {
@@ -28206,11 +28206,18 @@
 				onError: onError
 			}); // create request
 
-			const req = new Request(url, {
-				headers: new Headers(this.requestHeader),
-				credentials: this.withCredentials ? 'include' : 'same-origin' // An abort controller could be added within a future PR
+			// const req = new Request(url, {
+			// 	headers: new Headers(this.requestHeader),
+			// 	credentials: this.withCredentials ? 'include' : 'same-origin' // An abort controller could be added within a future PR
+			// }); // start the fetch
+			 wx.request({
+				url: '',
+				method: "GET",
+				success: (response) => {
 
-			}); // start the fetch
+				}
+			 }
+			)
 
 			fetch(req).then(response => {
 				if (response.status === 200 || response.status === 0) {
