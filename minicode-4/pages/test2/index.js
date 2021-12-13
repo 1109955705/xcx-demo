@@ -1,7 +1,7 @@
-const THREE = require("../../libs/three.js");
-// import * as THREE from '../../libs/three'
+import * as THREE from '../../libs/three.min.js'
 import { OBJLoader } from '../../libs/jsm/loaders/OBJLoader.js';
 const app = getApp();
+const RESOURCE_URL = 'https://raw.githubusercontent.com/1109955705/xcx-demo/master/minicode-4/libs/models/obj/cerberus/'
 Page({
   data: {
     canvasWidth: 0,
@@ -51,6 +51,11 @@ Page({
    * 初始化WebGL场景
    */
   initWebGLScene() {
+    //创建渲染器
+    const renderer = new THREE.WebGLRenderer({
+      canvas: this._webGLCanvas,
+    });
+
     // 摄像头
     const camera = new THREE.PerspectiveCamera(
       60,
@@ -63,60 +68,54 @@ Page({
     var scene = new THREE.Scene();
     this._scene = scene;
 
+    const material = new THREE.MeshStandardMaterial();
+
     // 模型
     new OBJLoader()
-					.setPath( '../../libs/models/obj/cerberus/' )
-					.load( 'Cerberus.obj', function ( group ) {
-            console.log('xxxxxx', group)
-            const loader = new THREE.TextureLoader()
-            .setPath( 'models/obj/cerberus/' );
-          })
-    var cubeGeo = new THREE.BoxGeometry(30, 30, 30);
-    //创建材质，设置材质为基本材质（不会反射光线，设置材质颜色为绿色）
-    var mat = new THREE.MeshBasicMaterial({ color: 0xCC00FF });
-    //创建Cube的Mesh对象
-    var cube = new THREE.Mesh(cubeGeo, mat);
-    //设置Cube对象的位置
-    cube.position.set(0, 0, -100);
-    //将Cube加入到场景中
-    this._scene.add(cube);
+          // .setPath( '../../libs/models/obj/cerberus/' )
+          .setPath('https://raw.githubusercontent.com/1109955705/xcx-demo/master/minicode-4/libs/models/obj/cerberus/')
+					.load( 'Cerberus.obj',  ( group ) => {
+            console.log('CerberXusXXXXXXXXX', group)
+            const textureLoader = new THREE.TextureLoader(undefined,this._webGLCanvas)
 
-    //创建渲染器
-    var renderer = new THREE.WebGLRenderer({
-      canvas: this._webGLCanvas,
-    });
+            material.roughness = 1;
+            material.metalness = 1;
+            
+            const diffuseMap = textureLoader.load( 'https://raw.githubusercontent.com/1109955705/xcx-demo/master/minicode-4/libs/models/obj/cerberus/Cerberus_A.jpg', this.renderWebGL);
+            console.log('diffuseMap', )
+            diffuseMap.encoding = THREE.sRGBEncoding;
+            material.map = diffuseMap;
+            
+            material.metalnessMap = material.roughnessMap = textureLoader.load( 'https://raw.githubusercontent.com/1109955705/xcx-demo/master/minicode-4/libs/models/obj/cerberus/Cerberus_RM.jpg', this.renderWebGL );
+            material.normalMap = textureLoader.load( RESOURCE_URL + 'Cerberus_N.jpg', this.renderWebGL );
+            
+            material.map.wrapS = THREE.RepeatWrapping;
+						material.roughnessMap.wrapS = THREE.RepeatWrapping;
+						material.metalnessMap.wrapS = THREE.RepeatWrapping;
+            material.normalMap.wrapS = THREE.RepeatWrapping;
+            
+            group.traverse( function ( child ) {
+							if ( child.isMesh ) {
+								child.material = material;
+							}
+						} );
+						group.rotation.y = Math.PI / 2;
+						group.position.x += 0.25;
+            scene.add( group );
+          })
+
     //设置渲染器大小
     this._renderer = renderer;
     this._renderer.setSize(this._webGLCanvas.width, this._webGLCanvas.height);
 
-    //记录当前时间
-    var lastTime = Date.now();
-    this._lastTime = lastTime;
-
     //开始渲染
-    this.renderWebGL(cube);
+    this.renderWebGL();
   },
 
   /**
    * 渲染函数
    */
-  renderWebGL(cube) {
-    //获取当前一帧的时间
-    var now = Date.now() ;
-    //计算时间间隔,由于Date对象返回的时间是毫秒，所以除以1000得到单位为秒的时间间隔
-    var duration = (now - this._lastTime) / 1000;
-    //打印帧率
-    // console.log(1/duration + 'FPS');
-    //重新赋值上一帧时间
-    this._lastTime = now;
-    //旋转Cube对象，这里希望每秒钟Cube对象沿着Y轴旋转180度（Three.js中用弧度表示，所以是Math.PI）
-    cube.rotation.y += duration * Math.PI;
-
-    //渲染执行场景，指定摄像头看到的画面
+  renderWebGL() {
     this._renderer.render(this._scene,this._camera);
-    //设置帧回调函数，并且每一帧调用自定义的渲染函数
-    this._webGLCanvas.requestAnimationFrame(()=>{
-      this.renderWebGL(cube);
-    });
   },
 });

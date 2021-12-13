@@ -1,4 +1,4 @@
-import * as THREE from '../../libs/three'
+import * as THREE from '../../libs/three.min.js'
 const app = getApp();
 Page({
   data: {

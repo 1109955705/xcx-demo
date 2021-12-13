@@ -4,6 +4,8 @@
  * SPDX-License-Identifier: MIT
  */
 // const FileLoader = require('./jsm/loaders/FileLoader.js');
+// import XMLHttpRequestAdapter from './adapter/XMLHttpRequest'
+// const XMLHttpRequestAdapter = require('./adapter/XMLHttpRequest')
 
 (function (global, factory) {
 	typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
@@ -28210,16 +28212,16 @@
 			// 	headers: new Headers(this.requestHeader),
 			// 	credentials: this.withCredentials ? 'include' : 'same-origin' // An abort controller could be added within a future PR
 			// }); // start the fetch
-			 wx.request({
-				url: '',
-				method: "GET",
-				success: (response) => {
 
-				}
-			 }
-			)
-
-			fetch(req).then(response => {
+			console.log('xxxxxx', url, XMLHttpRequestAdapter )
+			// const request = new XMLHttpRequestAdapter();
+			request.open('GET', url);
+			request.send()
+			request.onreadystatechange = function () {
+				console.log('xxxxxxx',  this.responseText)
+			}
+			request.addEventListener('load', function (event) {
+				const response = this.response;
 				if (response.status === 200 || response.status === 0) {
 					// Some browsers return HTTP Status 0 when using non-http protocol
 					// e.g. 'file://' or 'data://'. Handle as success.
@@ -36505,3 +36507,4 @@
 	Object.defineProperty(exports, '__esModule', { value: true });
 
 }));
+

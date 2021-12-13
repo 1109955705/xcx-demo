@@ -1,4 +1,5 @@
-import * as THREE from '../../libs/three'
+import test from '../../libs/util'
+
 const app = getApp();
 const pageNamesArr = [
   'test1',
@@ -8,24 +9,21 @@ Page({
   data: {
     pageNamesArr,
   },
-  onLoad() {},
+
   onReady() {
-    console.log('xxxxx')
-    const url = ''
-    wx.request({
-      url: 'www.baidu.com',
-      method: "GET",
-      success: (response) => {
-        console.log('success', response)
-      },
-      fail: (err) => {        
-        console.log('fail', err)      
-      },
-      complete: () => {        
-        console.log('complete')      
-      }
-     }
-    )
+    const url = 'https://raw.githubusercontent.com/1109955705/xcx-demo/master/minicode-4/libs/models/obj/cerberus/Cerberus.obj'
+ 
+    // wx.request({
+    //   url,
+    //   responseType: 'text',
+    //   success (res) {
+    //     console.log(res.data)
+    //   },
+    //   fail (err) {
+    //     console.log('error', err)
+    //   },
+    // })
+
   },
   jump() {
 

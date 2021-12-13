@@ -2,8 +2,8 @@
  * @author mrdoob / http://mrdoob.com/
  */
 
-import { Cache } from '../../three.js';
-import * as THREE from '../../three.js';
+import { Cache } from '../../three.min.js';
+import * as THREE from '../../three.min.js';
 
 var loading = {};
 

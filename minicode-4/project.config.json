@@ -41,7 +41,7 @@
     "useCompilerPlugins": false
   },
   "compileType": "miniprogram",
-  "libVersion": "2.21.1",
+  "libVersion": "2.19.6",
   "appid": "wx7330a98260d1f3f0",
   "projectname": "minicode-4",
   "debugOptions": {
