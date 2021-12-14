@@ -67,7 +67,7 @@ Page({
     // 场景
     var scene = new THREE.Scene();
     this._scene = scene;
-
+		scene.add( new THREE.HemisphereLight( 0x443333, 0x222233, 4 ) );
     const material = new THREE.MeshStandardMaterial();
 
     // 模型

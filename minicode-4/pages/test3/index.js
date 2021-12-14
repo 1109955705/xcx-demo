@@ -1,4 +1,4 @@
-import * as THREE from '../../libs/three.min.js'
+import * as THREE from '../../libs/three.js'
 const app = getApp();
 Page({
   data: {
@@ -41,6 +41,7 @@ Page({
           canvasWidth: this._sysInfo.windowWidth,
           canvasHeight: this._sysInfo.windowHeight,
         });
+
         this.initWebGLScene()
       });
   },
@@ -49,54 +50,35 @@ Page({
    * 初始化WebGL场景
    */
   initWebGLScene() {
-    //创建摄像头
-    const camera = new THREE.PerspectiveCamera(
-      60,
-      this._webGLCanvas.width / this._webGLCanvas.height,
-      1,
-      1000
-    );
-    this._camera = camera;
-    //创建场景
-    var scene = new THREE.Scene();
-    this._scene = scene;
-    //创建Cube几何体
-    var cubeGeo = new THREE.BoxGeometry(30, 30, 30);
-    //创建材质，设置材质为基本材质（不会反射光线，设置材质颜色为绿色）
-    var mat = new THREE.MeshBasicMaterial({ color: 0xfca745 });
-    //创建Cube的Mesh对象
-    var cube = new THREE.Mesh(cubeGeo, mat);
-    //设置Cube对象的位置
-    cube.position.set(0, 0, -100);
-    //将Cube加入到场景中
-    this._scene.add(cube);
 
-
-    const ambiLight = new THREE.AmbientLight(0x333333);
-    this._scene.add(ambiLight);
-    const direLight = new THREE.DirectionalLight(0xffffff, 1.0);
-    // 设置光源的位置
-    direLight.position.set(100, 300, 100);
-    this._scene.add(direLight);
-
-
-    //创建渲染器
-    var renderer = new THREE.WebGLRenderer({
+    const renderer = new THREE.WebGLRenderer({
       canvas: this._webGLCanvas,
     });
-    //设置渲染器大小
-    this._renderer = renderer;
-    this._renderer.setSize(this._webGLCanvas.width, this._webGLCanvas.height);
-    this._renderer.setClearColor(0x7fffd4, 1)
+    // renderer.setClearColor(0xffffff)
 
+    //创建摄像头
+    const camera = new THREE.PerspectiveCamera(
+      45,
+      this._webGLCanvas.width / this._webGLCanvas.height,
+      10,
+      2000
+    );
+    camera.up.set(0, 1, 0); // 设置相机对象的上方向是哪个轴
+    camera.position.set(0,0,0);
+    camera.lookAt(0,1,0);
 
+    const scene = new THREE.Scene();
 
-    //记录当前时间
-    var lastTime = Date.now();
-    this._lastTime = lastTime;
+    //辅助线 红色x轴 蓝色z轴 绿色y轴
+    const axesHelper = new THREE.AxesHelper(100);
+    scene.add( axesHelper );
 
-    //开始渲染
-    this.renderWebGL(cube);
+    var cubeGeo = new THREE.BoxGeometry(1, 2, 1);
+    var mat = new THREE.MeshBasicMaterial({ color: 0xfca745 });
+    var cube1 = new THREE.Mesh(cubeGeo, mat);
+    cube1.position.set(0, 0, 0);
+    scene.add( cube1 );
+    renderer.render(scene, camera);
   },
 
   /**
