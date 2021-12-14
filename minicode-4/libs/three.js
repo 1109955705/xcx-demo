@@ -3,10 +3,6 @@
  * Copyright 2010-2021 Three.js Authors
  * SPDX-License-Identifier: MIT
  */
-// const FileLoader = require('./jsm/loaders/FileLoader.js');
-// import XMLHttpRequestAdapter from './adapter/XMLHttpRequest'
-// const XMLHttpRequestAdapter = require('./adapter/XMLHttpRequest')
-
 (function (global, factory) {
 	typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
 	typeof define === 'function' && define.amd ? define(['exports'], factory) :
@@ -1163,6 +1159,7 @@
 				_canvas.height = image.height;
 
 				const context = _canvas.getContext('2d');
+
 				if (image instanceof ImageData) {
 					context.putImageData(image, 0, 0);
 				} else {
@@ -12552,9 +12549,7 @@
 				const extension = getExtension(name);
 
 				if (extension === null) {
-					console.log('xxxxxxxxxxx')
 					console.warn('THREE.WebGLRenderer: ' + name + ' extension not supported.');
-					console.log('xxxxxxxxxxx')
 				}
 
 				return extension;
@@ -15972,8 +15967,12 @@
 			equationToGL[MinEquation] = gl.MIN;
 			equationToGL[MaxEquation] = gl.MAX;
 		} else {
-			equationToGL[MinEquation] = 0x8007;
-			equationToGL[MaxEquation] = 0x8008;
+			const extension = extensions.get('EXT_blend_minmax');
+
+			if (extension !== null) {
+				equationToGL[MinEquation] = extension.MIN_EXT;
+				equationToGL[MaxEquation] = extension.MAX_EXT;
+			}
 		}
 
 		const factorToGL = {
@@ -18860,8 +18859,6 @@
 
 		const _this = this;
 
-		let _isContextLost = false; // internal state cache
-
 		let _currentActiveCubeFace = 0;
 		let _currentActiveMipmapLevel = 0;
 		let _currentRenderTarget = null;
@@ -18919,8 +18916,10 @@
 
 		function getContext(contextNames, contextAttributes) {
 			for (let i = 0; i < contextNames.length; i++) {
-				const contextName = contextNames[i];
+				contextNames[i];
+
 				const context = _canvas.getContext('webgl', contextAttributes);
+
 				if (context !== null) return context;
 			}
 
@@ -18940,10 +18939,8 @@
 			}; // OffscreenCanvas does not have setAttribute, see #22811
 
 			if ('setAttribute' in _canvas) _canvas.setAttribute('data-engine', `three.js r${REVISION}`); // event listeners must be registered before WebGL context is created, see #12753
-
-			// _canvas.addEventListener('webglcontextlost', onContextLost, false);
-
-			// _canvas.addEventListener('webglcontextrestored', onContextRestore, false);
+			// _canvas.addEventListener( 'webglcontextlost', onContextLost, false );
+			// _canvas.addEventListener( 'webglcontextrestored', onContextRestore, false );
 
 			if (_gl === null) {
 				const contextNames = ['webgl2', 'webgl', 'experimental-webgl'];
@@ -19177,10 +19174,8 @@
 
 
 		this.dispose = function () {
-			_canvas.removeEventListener('webglcontextlost', onContextLost, false);
-
-			_canvas.removeEventListener('webglcontextrestored', onContextRestore, false);
-
+			// _canvas.removeEventListener( 'webglcontextlost', onContextLost, false );
+			// _canvas.removeEventListener( 'webglcontextrestored', onContextRestore, false );
 			renderLists.dispose();
 			renderStates.dispose();
 			properties.dispose();
@@ -19200,29 +19195,6 @@
 
 			animation.stop();
 		}; // Events
-
-
-		function onContextLost(event) {
-			event.preventDefault();
-			console.log('THREE.WebGLRenderer: Context Lost.');
-			_isContextLost = true;
-		}
-
-		function onContextRestore() {
-			console.log('THREE.WebGLRenderer: Context Restored.');
-			_isContextLost = false;
-			const infoAutoReset = info.autoReset;
-			const shadowMapEnabled = shadowMap.enabled;
-			const shadowMapAutoUpdate = shadowMap.autoUpdate;
-			const shadowMapNeedsUpdate = shadowMap.needsUpdate;
-			const shadowMapType = shadowMap.type;
-			initGLContext();
-			info.autoReset = infoAutoReset;
-			shadowMap.enabled = shadowMapEnabled;
-			shadowMap.autoUpdate = shadowMapAutoUpdate;
-			shadowMap.needsUpdate = shadowMapNeedsUpdate;
-			shadowMap.type = shadowMapType;
-		}
 
 		function onMaterialDispose(event) {
 			const material = event.target;
@@ -19394,8 +19366,6 @@
 				console.error('THREE.WebGLRenderer.render: camera is not an instance of THREE.Camera.');
 				return;
 			}
-
-			if (_isContextLost === true) return; // update scene graph
 
 			if (scene.autoUpdate === true) scene.updateMatrixWorld(); // update camera matrices and frustum
 
@@ -28026,6 +27996,7 @@
 
 	class LoadingManager {
 		constructor(onLoad, onProgress, onError) {
+			console.log('--------LoadingManagers-----------');
 			const scope = this;
 			let isLoading = false;
 			let itemsLoaded = 0;
@@ -28121,13 +28092,14 @@
 	const DefaultLoadingManager = new LoadingManager();
 
 	class Loader {
-		constructor(manager) {
+		constructor(manager, canvas = '') {
 			this.manager = manager !== undefined ? manager : DefaultLoadingManager;
 			this.crossOrigin = 'anonymous';
 			this.withCredentials = false;
 			this.path = '';
 			this.resourcePath = '';
 			this.requestHeader = {};
+			this.canvas = canvas;
 		}
 
 		load() {}
@@ -28168,6 +28140,181 @@
 
 	}
 
+	const _url = new WeakMap();
+
+	const _method = new WeakMap();
+
+	const _requestHeader = new WeakMap();
+
+	const _responseHeader = new WeakMap();
+
+	const _requestTask = new WeakMap();
+
+	function _triggerEvent(type, ...args) {
+		if (typeof this[`on${type}`] === 'function') {
+			this[`on${type}`].apply(this, args);
+		}
+	}
+
+	function _changeReadyState(readyState) {
+		this.readyState = readyState;
+
+		_triggerEvent.call(this, 'readystatechange');
+	}
+
+	class XMLHttpRequest {
+		// TODO 没法模拟 HEADERS_RECEIVED 和 LOADING 两个状态
+
+		/*
+		 * TODO 这一批事件应该是在 XMLHttpRequestEventTarget.prototype 上面的
+		 */
+		constructor() {
+			this.onabort = null;
+			this.onerror = null;
+			this.onload = null;
+			this.onloadstart = null;
+			this.onprogress = null;
+			this.ontimeout = null;
+			this.onloadend = null;
+			this.onreadystatechange = null;
+			this.readyState = 0;
+			this.response = null;
+			this.responseText = null;
+			this.responseType = '';
+			this.responseXML = null;
+			this.status = 0;
+			this.statusText = '';
+			this.upload = {};
+			this.withCredentials = false;
+
+			_requestHeader.set(this, {
+				'content-type': 'text'
+			});
+
+			_responseHeader.set(this, {});
+		}
+
+		abort() {
+			const myRequestTask = _requestTask.get(this);
+
+			if (myRequestTask) {
+				myRequestTask.abort();
+			}
+		}
+
+		getAllResponseHeaders() {
+			const responseHeader = _responseHeader.get(this);
+
+			return Object.keys(responseHeader).map(header => {
+				return `${header}: ${responseHeader[header]}`;
+			}).join('\n');
+		}
+
+		getResponseHeader(header) {
+			return _responseHeader.get(this)[header];
+		}
+
+		open(method, url
+		/* async, user, password 这几个参数在小程序内不支持*/
+		) {
+			console.log('wx.request:open', url);
+
+			_method.set(this, method);
+
+			_url.set(this, url);
+
+			console.log('_url', _url);
+
+			_changeReadyState.call(this, XMLHttpRequest.OPENED);
+		}
+
+		overrideMimeType() {}
+
+		send(data = '') {
+			if (this.readyState !== XMLHttpRequest.OPENED) {
+				throw new Error("Failed to execute 'send' on 'XMLHttpRequest': The object's state must be OPENED.");
+			} else {
+				wx.request({
+					data,
+					url: _url.get(this),
+					method: _method.get(this),
+					header: _requestHeader.get(this),
+					responseType: this.responseType,
+					success: ({
+						data,
+						statusCode,
+						header
+					}) => {
+						if (typeof data !== 'string' && !(data instanceof ArrayBuffer)) {
+							try {
+								data = JSON.stringify(data);
+							} catch (e) {
+								data = data;
+							}
+						}
+
+						this.status = statusCode;
+
+						_responseHeader.set(this, header);
+
+						_triggerEvent.call(this, 'loadstart');
+
+						_changeReadyState.call(this, XMLHttpRequest.HEADERS_RECEIVED);
+
+						_changeReadyState.call(this, XMLHttpRequest.LOADING);
+
+						this.response = data;
+
+						if (data instanceof ArrayBuffer) {
+							this.responseText = '';
+							const bytes = new Uint8Array(data);
+							const len = bytes.byteLength;
+
+							for (let i = 0; i < len; i++) {
+								this.responseText += String.fromCharCode(bytes[i]);
+							}
+						} else {
+							this.responseText = data;
+						}
+
+						_changeReadyState.call(this, XMLHttpRequest.DONE);
+
+						_triggerEvent.call(this, 'load');
+
+						_triggerEvent.call(this, 'loadend');
+					},
+					fail: ({
+						errMsg
+					}) => {
+						// TODO 规范错误
+						if (errMsg.indexOf('abort') !== -1) {
+							_triggerEvent.call(this, 'abort');
+						} else {
+							_triggerEvent.call(this, 'error', errMsg);
+						}
+
+						_triggerEvent.call(this, 'loadend');
+					}
+				});
+			}
+		}
+
+		setRequestHeader(header, value) {
+			const myHeader = _requestHeader.get(this);
+
+			myHeader[header] = value;
+
+			_requestHeader.set(this, myHeader);
+		}
+
+	}
+
+	XMLHttpRequest.UNSEND = 0;
+	XMLHttpRequest.OPENED = 1;
+	XMLHttpRequest.HEADERS_RECEIVED = 2;
+	XMLHttpRequest.LOADING = 3;
+	XMLHttpRequest.DONE = 4;
+
 	const loading = {};
 
 	class FileLoader extends Loader {
@@ -28179,6 +28326,7 @@
 			if (url === undefined) url = '';
 			if (this.path !== undefined) url = this.path + url;
 			url = this.manager.resolveURL(url);
+			const scope = this;
 			const cached = Cache.get(url);
 
 			if (cached !== undefined) {
@@ -28206,107 +28354,30 @@
 				onLoad: onLoad,
 				onProgress: onProgress,
 				onError: onError
-			}); // create request
-
-			// const req = new Request(url, {
-			// 	headers: new Headers(this.requestHeader),
-			// 	credentials: this.withCredentials ? 'include' : 'same-origin' // An abort controller could be added within a future PR
-			// }); // start the fetch
-
-			console.log('xxxxxx', url, XMLHttpRequestAdapter )
-			// const request = new XMLHttpRequestAdapter();
+			});
+			const request = new XMLHttpRequest();
 			request.open('GET', url);
-			request.send()
+
 			request.onreadystatechange = function () {
-				console.log('xxxxxxx',  this.responseText)
-			}
-			request.addEventListener('load', function (event) {
-				const response = this.response;
-				if (response.status === 200 || response.status === 0) {
-					// Some browsers return HTTP Status 0 when using non-http protocol
-					// e.g. 'file://' or 'data://'. Handle as success.
-					if (response.status === 0) {
-						console.warn('THREE.FileLoader: HTTP Status 0 received.');
-					}
+				// Add to cache only on HTTP success, so that we do not cache
+				if (this.readyState == 4) {
+					if (this.status === 200) {
+						const responseText = this.responseText;
+						Cache.add(url, responseText);
+						const callbacks = loading[url];
+						delete loading[url];
 
-					const callbacks = loading[url];
-					const reader = response.body.getReader();
-					const contentLength = response.headers.get('Content-Length');
-					const total = contentLength ? parseInt(contentLength) : 0;
-					const lengthComputable = total !== 0;
-					let loaded = 0; // periodically read data into the new stream tracking while download progress
-
-					return new ReadableStream({
-						start(controller) {
-							readData();
-
-							function readData() {
-								reader.read().then(({
-									done,
-									value
-								}) => {
-									if (done) {
-										controller.close();
-									} else {
-										loaded += value.byteLength;
-										const event = new ProgressEvent('progress', {
-											lengthComputable,
-											loaded,
-											total
-										});
-
-										for (let i = 0, il = callbacks.length; i < il; i++) {
-											const callback = callbacks[i];
-											if (callback.onProgress) callback.onProgress(event);
-										}
-
-										controller.enqueue(value);
-										readData();
-									}
-								});
-							}
+						for (let i = 0, il = callbacks.length; i < il; i++) {
+							const callback = callbacks[i];
+							if (callback.onLoad) callback.onLoad(responseText);
 						}
 
-					});
-				} else {
-					throw Error(`fetch for "${response.url}" responded with ${response.status}: ${response.statusText}`);
+						scope.manager.itemEnd(url);
+					}
 				}
-			}).then(stream => {
-				const response = new Response(stream);
+			};
 
-				switch (this.responseType) {
-					case 'arraybuffer':
-						return response.arrayBuffer();
-
-					case 'blob':
-						return response.blob();
-
-					case 'document':
-						return response.text().then(text => {
-							const parser = new DOMParser();
-							return parser.parseFromString(text, this.mimeType);
-						});
-
-					case 'json':
-						return response.json();
-
-					default:
-						return response.text();
-				}
-			}).then(data => {
-				// Add to cache only on HTTP success, so that we do not cache
-				// error response bodies as proper responses to requests.
-				Cache.add(url, data);
-				const callbacks = loading[url];
-				delete loading[url];
-
-				for (let i = 0, il = callbacks.length; i < il; i++) {
-					const callback = callbacks[i];
-					if (callback.onLoad) callback.onLoad(data);
-				}
-
-				this.manager.itemEnd(url);
-			}).catch(err => {
+			request.onerror = function () {
 				// Abort errors and other errors are handled the same
 				const callbacks = loading[url];
 				delete loading[url];
@@ -28316,9 +28387,94 @@
 					if (callback.onError) callback.onError(err);
 				}
 
-				this.manager.itemError(url);
-				this.manager.itemEnd(url);
-			});
+				scope.manager.itemError(url);
+				scope.manager.itemEnd(url);
+			};
+
+			request.send(); // start the fetch
+			// fetch( req )
+			// 	.then( response => {
+			// 		if ( response.status === 200 || response.status === 0 ) {
+			// 			// Some browsers return HTTP Status 0 when using non-http protocol
+			// 			// e.g. 'file://' or 'data://'. Handle as success.
+			// 			if ( response.status === 0 ) {
+			// 				console.warn( 'THREE.FileLoader: HTTP Status 0 received.' );
+			// 			}
+			// 			const callbacks = loading[ url ];
+			// 			const reader = response.body.getReader();
+			// 			const contentLength = response.headers.get( 'Content-Length' );
+			// 			const total = contentLength ? parseInt( contentLength ) : 0;
+			// 			const lengthComputable = total !== 0;
+			// 			let loaded = 0;
+			// 			// periodically read data into the new stream tracking while download progress
+			// 			return new ReadableStream( {
+			// 				start( controller ) {
+			// 					readData();
+			// 					function readData() {
+			// 						reader.read().then( ( { done, value } ) => {
+			// 							if ( done ) {
+			// 								controller.close();
+			// 							} else {
+			// 								loaded += value.byteLength;
+			// 								const event = new ProgressEvent( 'progress', { lengthComputable, loaded, total } );
+			// 								for ( let i = 0, il = callbacks.length; i < il; i ++ ) {
+			// 									const callback = callbacks[ i ];
+			// 									if ( callback.onProgress ) callback.onProgress( event );
+			// 								}
+			// 								controller.enqueue( value );
+			// 								readData();
+			// 							}
+			// 						} );
+			// 					}
+			// 				}
+			// 			} );
+			// 		} else {
+			// 			throw Error( `fetch for "${response.url}" responded with ${response.status}: ${response.statusText}` );
+			// 		}
+			// 	} )
+			// 	.then( stream => {
+			// 		const response = new Response( stream );
+			// 		switch ( this.responseType ) {
+			// 			case 'arraybuffer':
+			// 				return response.arrayBuffer();
+			// 			case 'blob':
+			// 				return response.blob();
+			// 			case 'document':
+			// 				return response.text()
+			// 					.then( text => {
+			// 						const parser = new DOMParser();
+			// 						return parser.parseFromString( text, this.mimeType );
+			// 					} );
+			// 			case 'json':
+			// 				return response.json();
+			// 			default:
+			// 				return response.text();
+			// 		}
+			// 	} )
+			// 	.then( data => {
+			// 		// Add to cache only on HTTP success, so that we do not cache
+			// 		// error response bodies as proper responses to requests.
+			// 		Cache.add( url, data );
+			// 		const callbacks = loading[ url ];
+			// 		delete loading[ url ];
+			// 		for ( let i = 0, il = callbacks.length; i < il; i ++ ) {
+			// 			const callback = callbacks[ i ];
+			// 			if ( callback.onLoad ) callback.onLoad( data );
+			// 		}
+			// 		this.manager.itemEnd( url );
+			// 	} )
+			// 	.catch( err => {
+			// 		// Abort errors and other errors are handled the same
+			// 		const callbacks = loading[ url ];
+			// 		delete loading[ url ];
+			// 		for ( let i = 0, il = callbacks.length; i < il; i ++ ) {
+			// 			const callback = callbacks[ i ];
+			// 			if ( callback.onError ) callback.onError( err );
+			// 		}
+			// 		this.manager.itemError( url );
+			// 		this.manager.itemEnd( url );
+			// 	} );
+
 			this.manager.itemStart(url);
 		}
 
@@ -28464,8 +28620,8 @@
 	}
 
 	class ImageLoader extends Loader {
-		constructor(manager) {
-			super(manager);
+		constructor(manager, canvas) {
+			super(manager, canvas);
 		}
 
 		load(url, onLoad, onProgress, onError) {
@@ -28483,29 +28639,27 @@
 				return cached;
 			}
 
-			const image = createElementNS('img');
+			console.log('createImage', url);
+			const image = this.canvas.createImage();
+			image.src = url; // 网络图片地址
 
 			function onImageLoad() {
-				removeEventListeners();
+				console.log('onImageLoadxxxxxxxxxxx', Cache, onLoad, this);
 				Cache.add(url, this);
 				if (onLoad) onLoad(this);
 				scope.manager.itemEnd(url);
+				console.log('onImageLoad:end');
 			}
 
 			function onImageError(event) {
-				removeEventListeners();
+				console.log('onImageError');
 				if (onError) onError(event);
 				scope.manager.itemError(url);
 				scope.manager.itemEnd(url);
 			}
 
-			function removeEventListeners() {
-				image.removeEventListener('load', onImageLoad, false);
-				image.removeEventListener('error', onImageError, false);
-			}
-
-			image.addEventListener('load', onImageLoad, false);
-			image.addEventListener('error', onImageError, false);
+			image.onload = onImageLoad;
+			image.onerror = onImageError;
 
 			if (url.substr(0, 5) !== 'data:') {
 				if (this.crossOrigin !== undefined) image.crossOrigin = this.crossOrigin;
@@ -28626,22 +28780,27 @@
 	}
 
 	class TextureLoader extends Loader {
-		constructor(manager) {
-			super(manager);
+		constructor(manager, canvas) {
+			super(manager, canvas);
 		}
 
 		load(url, onLoad, onProgress, onError) {
 			const texture = new Texture();
-			const loader = new ImageLoader(this.manager);
+			const loader = new ImageLoader(this.manager, this.canvas);
 			loader.setCrossOrigin(this.crossOrigin);
 			loader.setPath(this.path);
 			loader.load(url, function (image) {
 				texture.image = image;
 				texture.needsUpdate = true;
+				console.log('xxxxxx', texture, onLoad);
 
 				if (onLoad !== undefined) {
+					console.log('1111111', onLoad);
 					onLoad(texture);
+					console.log('2222');
 				}
+
+				console.log('3333');
 			}, onProgress, onError);
 			return texture;
 		}
@@ -34907,10 +35066,14 @@
 	};
 
 	Loader.Handlers = {
-		add: function () {
+		add: function
+			/* regex, loader */
+		() {
 			console.error('THREE.Loader: Handlers.add() has been removed. Use LoadingManager.addHandler() instead.');
 		},
-		get: function () {
+		get: function
+			/* file */
+		() {
 			console.error('THREE.Loader: Handlers.get() has been removed. Use LoadingManager.getHandler() instead.');
 		}
 	};
@@ -34998,7 +35161,9 @@
 		return vector.applyMatrix3(this);
 	};
 
-	Matrix3.prototype.multiplyVector3Array = function () {
+	Matrix3.prototype.multiplyVector3Array = function
+		/* a */
+	() {
 		console.error('THREE.Matrix3: .multiplyVector3Array() has been removed.');
 	};
 
@@ -35007,7 +35172,9 @@
 		return attribute.applyMatrix3(this);
 	};
 
-	Matrix3.prototype.applyToVector3Array = function () {
+	Matrix3.prototype.applyToVector3Array = function
+		/* array, offset, length */
+	() {
 		console.error('THREE.Matrix3: .applyToVector3Array() has been removed.');
 	};
 
@@ -35051,7 +35218,9 @@
 		return vector.applyMatrix4(this);
 	};
 
-	Matrix4.prototype.multiplyVector3Array = function () {
+	Matrix4.prototype.multiplyVector3Array = function
+		/* a */
+	() {
 		console.error('THREE.Matrix4: .multiplyVector3Array() has been removed.');
 	};
 
@@ -35090,7 +35259,9 @@
 		return attribute.applyMatrix4(this);
 	};
 
-	Matrix4.prototype.applyToVector3Array = function () {
+	Matrix4.prototype.applyToVector3Array = function
+		/* array, offset, length */
+	() {
 		console.error('THREE.Matrix4: .applyToVector3Array() has been removed.');
 	};
 
@@ -35423,7 +35594,9 @@
 				console.warn('THREE.BufferAttribute: .dynamic has been deprecated. Use .usage instead.');
 				return this.usage === DynamicDrawUsage;
 			},
-			set: function () {
+			set: function
+				/* value */
+			() {
 				console.warn('THREE.BufferAttribute: .dynamic has been deprecated. Use .usage instead.');
 				this.setUsage(DynamicDrawUsage);
 			}
@@ -35436,9 +35609,13 @@
 		return this;
 	};
 
-	BufferAttribute.prototype.copyIndicesArray = function () {
+	BufferAttribute.prototype.copyIndicesArray = function
+		/* indices */
+	() {
 		console.error('THREE.BufferAttribute: .copyIndicesArray() has been removed.');
-	}, BufferAttribute.prototype.setArray = function () {
+	}, BufferAttribute.prototype.setArray = function
+		/* array */
+	() {
 		console.error('THREE.BufferAttribute: .setArray has been removed. Use BufferGeometry .setAttribute to replace/resize attribute buffers');
 	}; //
 
@@ -35513,7 +35690,9 @@
 		return this;
 	};
 
-	InterleavedBuffer.prototype.setArray = function () {
+	InterleavedBuffer.prototype.setArray = function
+		/* array */
+	() {
 		console.error('THREE.InterleavedBuffer: .setArray has been removed. Use BufferGeometry .setAttribute to replace/resize attribute buffers');
 	}; //
 
@@ -35747,7 +35926,9 @@
 				console.warn('THREE.WebGLRenderer: .shadowMapCullFace has been removed. Set Material.shadowSide instead.');
 				return undefined;
 			},
-			set: function () {
+			set: function
+				/* value */
+			() {
 				console.warn('THREE.WebGLRenderer: .shadowMapCullFace has been removed. Set Material.shadowSide instead.');
 			}
 		},
@@ -35798,7 +35979,9 @@
 				console.warn('THREE.WebGLRenderer: .shadowMap.cullFace has been removed. Set Material.shadowSide instead.');
 				return undefined;
 			},
-			set: function () {
+			set: function
+				/* cullFace */
+			() {
 				console.warn('THREE.WebGLRenderer: .shadowMap.cullFace has been removed. Set Material.shadowSide instead.');
 			}
 		},
@@ -35993,13 +36176,19 @@
 	} //
 
 	const SceneUtils = {
-		createMultiMaterialObject: function () {
+		createMultiMaterialObject: function
+			/* geometry, materials */
+		() {
 			console.error('THREE.SceneUtils has been moved to /examples/jsm/utils/SceneUtils.js');
 		},
-		detach: function () {
+		detach: function
+			/* child, parent, scene */
+		() {
 			console.error('THREE.SceneUtils has been moved to /examples/jsm/utils/SceneUtils.js');
 		},
-		attach: function () {
+		attach: function
+			/* child, scene, parent */
+		() {
 			console.error('THREE.SceneUtils has been moved to /examples/jsm/utils/SceneUtils.js');
 		}
 	}; //
@@ -36507,4 +36696,3 @@
 	Object.defineProperty(exports, '__esModule', { value: true });
 
 }));
-
