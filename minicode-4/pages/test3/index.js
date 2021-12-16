@@ -1,12 +1,15 @@
-import * as THREE from '../../libs/three.js'
 const app = getApp();
+import * as THREE from '../../libs/three.min.js'
+import { OrbitControls } from '../../libs/jsm/controls/OrbitControls'
+import EventBus from '../../libs/adpter/EventBus'
+import touchEventHandlerFactory from '../../libs/adpter/touchEventHandlerFactory'
+
 Page({
   data: {
     canvasWidth: 0,
     canvasHeight: 0,
   },
   onLoad() {
-
 
   },
   onReady() {
@@ -34,8 +37,11 @@ Page({
           this._sysInfo.windowHeight * this._sysInfo.pixelRatio;
         //设置canvas的样式
         this._webGLCanvas.style = {};
-        this._webGLCanvas.style.width = this._webGLCanvas.width.width;
-        this._webGLCanvas.style.height = this._webGLCanvas.width.height;
+        this._webGLCanvas.style.width = this._webGLCanvas.width;
+        this._webGLCanvas.style.height = this._webGLCanvas.height;
+
+        this._webGLCanvas.clientHeight = this._webGLCanvas.height
+        this._webGLCanvas.clientWidth = this._webGLCanvas.width;
         //设置显示层canvas绑定的样式style数据，页面层则直接用窗口大小来定义
         this.setData({
           canvasWidth: this._sysInfo.windowWidth,
@@ -54,8 +60,8 @@ Page({
     const renderer = new THREE.WebGLRenderer({
       canvas: this._webGLCanvas,
     });
+    this._renderer = renderer
     // renderer.setClearColor(0xffffff)
-
     //创建摄像头
     const camera = new THREE.PerspectiveCamera(
       45,
@@ -63,44 +69,55 @@ Page({
       10,
       2000
     );
+    this._camera = camera
     camera.up.set(0, 1, 0); // 设置相机对象的上方向是哪个轴
-    camera.position.set(0,0,0);
-    camera.lookAt(0,1,0);
-
+    camera.position.set(100,100,100);
+    camera.lookAt(0,0,0);
+    const controls = new OrbitControls(camera, renderer.domElement);
+    //是否可以缩放 
+    controls.enableZoom = true; 
+    controls.addEventListener('change', this.renderWebGL);
     const scene = new THREE.Scene();
-
+    this._scene = scene
     //辅助线 红色x轴 蓝色z轴 绿色y轴
     const axesHelper = new THREE.AxesHelper(100);
     scene.add( axesHelper );
 
-    var cubeGeo = new THREE.BoxGeometry(1, 2, 1);
-    var mat = new THREE.MeshBasicMaterial({ color: 0xfca745 });
-    var cube1 = new THREE.Mesh(cubeGeo, mat);
-    cube1.position.set(0, 0, 0);
-    scene.add( cube1 );
-    renderer.render(scene, camera);
+    const cubeGeo = new THREE.BoxGeometry(20, 20, 20);
+    const texture = new THREE.TextureLoader(undefined,this._webGLCanvas).load( '../../libs/textures/crate.gif' );
+    // var mat = new THREE.MeshBasicMaterial({ color: 0xfca745 });
+
+    const mat = new THREE.MeshBasicMaterial({ map: texture });
+    const cube = new THREE.Mesh(cubeGeo, mat);
+    cube.position.set(0, 0, 0);
+    scene.add( cube );
+    setTimeout(() => {
+      this._renderer.render(this._scene,this._camera);
+    }, 200)
   },
 
   /**
    * 渲染函数
    */
-  renderWebGL(cube) {
-    //获取当前一帧的时间
-    var now = Date.now() ;
-    //计算时间间隔,由于Date对象返回的时间是毫秒，所以除以1000得到单位为秒的时间间隔
-    var duration = (now - this._lastTime) / 1000;
-    //打印帧率
-    // console.log(1/duration + 'FPS');
-    //重新赋值上一帧时间
-    this._lastTime = now;
-    //旋转Cube对象，这里希望每秒钟Cube对象沿着Y轴旋转180度（Three.js中用弧度表示，所以是Math.PI）
-    cube.rotation.y += duration * Math.PI;
-
-    //渲染执行场景，指定摄像头看到的画面
-    this._renderer.render(this._scene,this._camera);
-    //设置帧回调函数，并且每一帧调用自定义的渲染函数
+  renderWebGL() {
     this._webGLCanvas.requestAnimationFrame(()=>{
-      this.renderWebGL(cube);
+      this._renderer.render(this._scene,this._camera);
     });
+  },
+  onTouchStart(e) {
+    const event = touchEventHandlerFactory(e)
+    EventBus.dispatchEvent(event)
+  },
+  onTouchMove(e) {
+    const event = touchEventHandlerFactory(e)
+    EventBus.dispatchEvent(event)
+  },
+  onTouchEnd(e) {
+    const event = touchEventHandlerFactory(e)
+    EventBus.dispatchEvent(event)
+  },
+  onTouchTap(e) {
+    const event = touchEventHandlerFactory(e)
+    EventBus.dispatchEvent(event)
   },
 });

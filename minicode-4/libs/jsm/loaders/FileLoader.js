@@ -12,7 +12,7 @@ function FileLoader( manager ) {
 	Loader.call( this, manager );
 
 }
-console.log('xxxxxx', THREE, THREE.Loader)
+
 FileLoader.prototype = Object.assign( Object.create( Loader.prototype ), {
 
 	constructor: FileLoader,
