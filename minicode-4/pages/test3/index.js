@@ -1,15 +1,16 @@
-const app = getApp();
 import * as THREE from '../../libs/three.min.js'
+import { OBJLoader } from '../../libs/jsm/loaders/OBJLoader.js';
 import { OrbitControls } from '../../libs/jsm/controls/OrbitControls'
-import EventBus from '../../libs/adpter/EventBus'
-import touchEventHandlerFactory from '../../libs/adpter/touchEventHandlerFactory'
-
+const app = getApp();
+// https://gitee.com/zhisonggang/threejs/raw/master/examples/models/obj/cerberus/Cerberus.obj
+const RESOURCE_URL = 'https://gitee.com/zhisonggang/threejs/raw/master/examples/models/obj/cerberus/'
 Page({
   data: {
     canvasWidth: 0,
     canvasHeight: 0,
   },
   onLoad() {
+
 
   },
   onReady() {
@@ -37,17 +38,13 @@ Page({
           this._sysInfo.windowHeight * this._sysInfo.pixelRatio;
         //设置canvas的样式
         this._webGLCanvas.style = {};
-        this._webGLCanvas.style.width = this._webGLCanvas.width;
-        this._webGLCanvas.style.height = this._webGLCanvas.height;
-
-        this._webGLCanvas.clientHeight = this._webGLCanvas.height
-        this._webGLCanvas.clientWidth = this._webGLCanvas.width;
+        this._webGLCanvas.style.width = this._webGLCanvas.width.width;
+        this._webGLCanvas.style.height = this._webGLCanvas.width.height;
         //设置显示层canvas绑定的样式style数据，页面层则直接用窗口大小来定义
         this.setData({
           canvasWidth: this._sysInfo.windowWidth,
           canvasHeight: this._sysInfo.windowHeight,
         });
-
         this.initWebGLScene()
       });
   },
@@ -56,44 +53,76 @@ Page({
    * 初始化WebGL场景
    */
   initWebGLScene() {
-
+    //创建渲染器
     const renderer = new THREE.WebGLRenderer({
       canvas: this._webGLCanvas,
     });
-    this._renderer = renderer
-    // renderer.setClearColor(0xffffff)
-    //创建摄像头
+
+    // 摄像头
     const camera = new THREE.PerspectiveCamera(
-      45,
+      60,
       this._webGLCanvas.width / this._webGLCanvas.height,
-      10,
-      2000
+      1,
+      1000
     );
-    this._camera = camera
+    this._camera = camera;
     camera.up.set(0, 1, 0); // 设置相机对象的上方向是哪个轴
-    camera.position.set(100,100,100);
+    camera.position.set(0,0,100);
     camera.lookAt(0,0,0);
-    const controls = new OrbitControls(camera, renderer.domElement);
-    //是否可以缩放 
-    controls.enableZoom = true; 
-    controls.addEventListener('change', this.renderWebGL);
-    const scene = new THREE.Scene();
-    this._scene = scene
-    //辅助线 红色x轴 蓝色z轴 绿色y轴
-    const axesHelper = new THREE.AxesHelper(100);
-    scene.add( axesHelper );
 
-    const cubeGeo = new THREE.BoxGeometry(20, 20, 20);
-    const texture = new THREE.TextureLoader(undefined,this._webGLCanvas).load( '../../libs/textures/crate.gif' );
-    // var mat = new THREE.MeshBasicMaterial({ color: 0xfca745 });
+    // 场景
+    var scene = new THREE.Scene();
+    this._scene = scene;
+    const hemiLight = new THREE.HemisphereLight(  0x443333, 0x222233, 50 );
+    scene.add( hemiLight );
+    const hemiLightHelper = new THREE.HemisphereLightHelper( hemiLight, 30 );
+    scene.add( hemiLightHelper );
+    const material = new THREE.MeshStandardMaterial();
 
-    const mat = new THREE.MeshBasicMaterial({ map: texture });
-    const cube = new THREE.Mesh(cubeGeo, mat);
-    cube.position.set(0, 0, 0);
-    scene.add( cube );
-    setTimeout(() => {
-      this._renderer.render(this._scene,this._camera);
-    }, 200)
+    // 模型
+    new OBJLoader()
+          .setPath(RESOURCE_URL)
+					.load( 'Cerberus.obj',  ( group ) => {
+            const textureLoader = new THREE.TextureLoader(undefined,this._webGLCanvas)
+              .setPath(RESOURCE_URL);
+
+            material.roughness = 1;
+            material.metalness = 1;
+            
+            const diffuseMap = textureLoader.load('Cerberus_A.jpg',  this.renderWebGL);
+            console.log('diffuseMap', diffuseMap)
+            diffuseMap.encoding = THREE.sRGBEncoding;
+            material.map = diffuseMap;
+            
+            material.metalnessMap = material.roughnessMap = textureLoader.load('Cerberus_RM.jpg',  this.renderWebGL);
+            material.normalMap = textureLoader.load('Cerberus_N.jpg',  this.renderWebGL);
+            
+            material.map.wrapS = THREE.RepeatWrapping;
+						material.roughnessMap.wrapS = THREE.RepeatWrapping;
+						material.metalnessMap.wrapS = THREE.RepeatWrapping;
+            material.normalMap.wrapS = THREE.RepeatWrapping;
+
+            group.traverse( function ( child ) {
+              console.log('child', child.isMesh)
+							if ( child.isMesh ) {
+								child.material = material;
+							}
+						} );
+						group.rotation.y = Math.PI / 2;
+            group.position.x += 10;
+            group.position.y += 0;
+            group.scale.set(30,30,30)
+            // group.children[0].material.color.set(0xFFB6C1);//设置材质颜色
+            scene.add(group);
+
+            this.renderWebGL();
+          })
+    //设置渲染器大小
+    this._renderer = renderer;
+    this._renderer.setSize(this._webGLCanvas.width, this._webGLCanvas.height);
+    renderer.setClearColor(0x7fffd4, 1)
+    //开始渲染
+    this.renderWebGL();
   },
 
   /**
@@ -103,21 +132,5 @@ Page({
     this._webGLCanvas.requestAnimationFrame(()=>{
       this._renderer.render(this._scene,this._camera);
     });
-  },
-  onTouchStart(e) {
-    const event = touchEventHandlerFactory(e)
-    EventBus.dispatchEvent(event)
-  },
-  onTouchMove(e) {
-    const event = touchEventHandlerFactory(e)
-    EventBus.dispatchEvent(event)
-  },
-  onTouchEnd(e) {
-    const event = touchEventHandlerFactory(e)
-    EventBus.dispatchEvent(event)
-  },
-  onTouchTap(e) {
-    const event = touchEventHandlerFactory(e)
-    EventBus.dispatchEvent(event)
   },
 });

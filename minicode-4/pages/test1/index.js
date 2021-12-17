@@ -21,8 +21,6 @@ Page({
       .fields({ node: true, size: true })
       .exec((res) => {
         const canvas = res[0].node;
-        const ctx = canvas.getContext('webgl')
-        console.log('xxxxx', ctx)
         const { windowWidth, windowHeight } = wx.getSystemInfoSync();
         this.setData({
           canvasWidth: windowWidth,

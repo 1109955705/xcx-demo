@@ -8,9 +8,6 @@ export default (_canvas) => {
   canvas.width = windowWidth * pixelRatio;
   canvas.height = windowHeight * pixelRatio;
 
-  const ctx = canvas.getContext('2d')
-  console.log('xxxxxx', ctx)
-  // ctx.scale(pixelRatio, pixelRatio)
   initScene(); // 初始化场景
   initCamera(); // 初始化相机
   initRenender(); // 初始化渲染器
