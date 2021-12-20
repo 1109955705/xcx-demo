@@ -1,12 +1,18 @@
-import * as THREE from '../../libs/three.min.js'
+import * as THREE from '../../libs/three.js'
 
 const { windowWidth, windowHeight, pixelRatio, } = wx.getSystemInfoSync();
 let canvas, scene, renderer, camera;
 let cube;
 export default (_canvas) => {
   canvas = _canvas;
+  // 设置画布大小
   canvas.width = windowWidth * pixelRatio;
   canvas.height = windowHeight * pixelRatio;
+
+  // 防止threejs报错，本意是修改canvas的style上的属性，即视图窗口大小，但微信小程序不支持. threejs中有使用
+  // canvas.style = {} 
+  // canvas.style.width = windowWidth * pixelRatio;
+  // canvas.style.height = windowHeight * pixelRatio; 
 
   initScene(); // 初始化场景
   initCamera(); // 初始化相机
@@ -15,10 +21,17 @@ export default (_canvas) => {
   // initOthers(); // 初始化其他参数
   // initaxisHelper(); // 辅助坐标
   initGeometrys() // 初始化物体
+
+  /**
+   * 初始化场景
+   */
   function initScene() {
     scene = new THREE.Scene();
   }
 
+  /**
+   * 初始化相机
+   */
   function initCamera() {
     camera = new THREE.PerspectiveCamera(
       60,
@@ -28,14 +41,20 @@ export default (_canvas) => {
     );
   }
 
+  /**
+   * 初始化渲染器
+   */
   function initRenender() {
     renderer = new THREE.WebGLRenderer({
       canvas,
     });
-    // renderer.setSize(this._webGLCanvas.width, this._webGLCanvas.height);
+    // renderer.setSize(1000, 1000);
     renderer.setClearColor(0x7fffd4, 1)
   }
 
+  /**
+   * 初始化灯光
+   */
   function initLight() {
     const ambiLight = new THREE.AmbientLight(0x333333);
     scene.add(ambiLight);
@@ -45,6 +64,9 @@ export default (_canvas) => {
     scene.add(direLight);
   }
 
+  /**
+   * 初始化物体
+   */
   function initGeometrys() {
     const cubeGeo = new THREE.BoxGeometry(30, 30, 30);
     //创建材质，设置材质为基本材质（不会反射光线，设置材质颜色为绿色）
@@ -57,10 +79,16 @@ export default (_canvas) => {
     scene.add(cube);
   }
 
+  /**
+   * 设置动画
+   */
   function animation() {
     cube.rotation.y += 0.03;
   }
 
+  /**
+   * 渲染函数
+   */
   function render() {
     animation()
     renderer.render(scene, camera)

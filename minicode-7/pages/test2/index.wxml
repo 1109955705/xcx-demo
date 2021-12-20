@@ -1,0 +1,3 @@
+<!--pages/test2/index.wxml-->
+<canvas type="webgl" id="myCanvas" style="width: {{canvasWidth}}px;height: {{canvasHeight}}px;" />
+<button class="btn-export" bindtap="export">导出为图片</button>

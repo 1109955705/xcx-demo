@@ -1,6 +1,5 @@
-import * as THREE from '../../libs/three.js'
 import useThree from './useThree'
-const app = getApp();
+
 Page({
   data: {
     canvasWidth: 0,
@@ -10,8 +9,8 @@ Page({
   onReady() {
     //初始化Canvas对象
     this.initWebGLCanvas();
-    // 设置场景
   },
+
   /**
    * 初始化Canvas对象
    */
@@ -22,6 +21,7 @@ Page({
       .exec((res) => {
         const canvas = res[0].node;
         const { windowWidth, windowHeight } = wx.getSystemInfoSync();
+        // 设置视图窗口大小 默认是300 * 150
         this.setData({
           canvasWidth: windowWidth,
           canvasHeight: windowHeight,

@@ -19055,6 +19055,7 @@
 		};
 
 		this.setSize = function (width, height, updateStyle) {
+			console.log('setSize', _width, _height, _canvas, _canvas.style)
 			if (xr.isPresenting) {
 				console.warn('THREE.WebGLRenderer: Can\'t change size while VR device is presenting.');
 				return;

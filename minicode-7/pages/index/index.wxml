@@ -1,0 +1,8 @@
+<view class="main">
+  <navigator 
+    class="nav" 
+    wx:for="{{pageNamesArr}}" 
+    url="/pages/{{item}}/index"
+    wx:key="index"
+    >{{item}}</navigator>
+</view>
