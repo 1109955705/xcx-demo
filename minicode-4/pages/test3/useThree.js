@@ -2,7 +2,7 @@ import * as THREE from '../../libs/three.min.js'
 import { OBJLoader } from '../../libs/jsm/loaders/OBJLoader.js';
 import { OrbitControls } from '../../libs/jsm/controls/OrbitControls'
 
-const RESOURCE_URL = 'http://cdn.zhisonggang.com/threejs/examples/models/obj/cerberus/'
+const RESOURCE_URL = 'https://cdn.zhisonggang.com/threejs/examples/models/obj/cerberus/'
 
 const { windowWidth, windowHeight, pixelRatio, } = wx.getSystemInfoSync();
 let canvas, scene, renderer, camera, controls;
@@ -10,7 +10,7 @@ let cube;
 
 export default (_canvas) => {
   canvas = _canvas;
-  // 设置画布大小
+
   canvas.width = windowWidth * pixelRatio;
   canvas.height = windowHeight * pixelRatio;
 
@@ -18,7 +18,7 @@ export default (_canvas) => {
   canvas.clientHeight = canvas.height
   canvas.clientWidth = canvas.width;
 
-  // 防止threejs报错，本意是修改canvas的style上的属性，即视图窗口大小，但微信小程序不支持. threejs和其它文件中有使用这个属性
+  // 防止threejs报错，本意是修改canvas的style上的属性，即视图窗口大小
   canvas.style = {} 
   canvas.style.width = windowWidth * pixelRatio;
   canvas.style.height = windowHeight * pixelRatio; 
@@ -39,7 +39,7 @@ export default (_canvas) => {
     renderer = new THREE.WebGLRenderer({
       canvas,
     });
-    renderer.setClearColor(0x7fffd4, 1)
+    renderer.setClearColor(0xffe4c4, 1)
     renderer.outputEncoding = THREE.sRGBEncoding; // 
     renderer.toneMapping = THREE.ReinhardToneMapping; // 色彩映射
     renderer.toneMappingExposure = 3; // 色调映射的曝光级别
@@ -56,7 +56,7 @@ export default (_canvas) => {
       1000
     );
     camera.up.set(0, 1, 0); // 设置相机对象的上方向是哪个轴
-    camera.position.set(0,0,100);
+    camera.position.set(-50, 0, -100);
     camera.lookAt(0,0,0);
   }
 
@@ -139,12 +139,6 @@ export default (_canvas) => {
     scene.add( hemiLight );
     const hemiLightHelper = new THREE.HemisphereLightHelper( hemiLight, 30 );
     scene.add( hemiLightHelper );
-    // const light = new THREE.PointLight( 0xff0000, 1, 100 );
-    // light.position.set( 50, 50, 50 );
-    // scene.add( light );
-   
-    // const light = new THREE.AmbientLight( 0x404040 );
-    // scene.add( light );
   }
 
   /**

@@ -1,18 +1,18 @@
-import * as THREE from '../../libs/three.js'
+import * as THREE from '../../libs/three.min.js'
 
 const { windowWidth, windowHeight, pixelRatio, } = wx.getSystemInfoSync();
 let canvas, scene, renderer, camera;
 let cube;
 export default (_canvas) => {
   canvas = _canvas;
-  // 设置画布大小
+
   canvas.width = windowWidth * pixelRatio;
   canvas.height = windowHeight * pixelRatio;
 
-  // 防止threejs报错，本意是修改canvas的style上的属性，即视图窗口大小，但微信小程序不支持. threejs中有使用
-  // canvas.style = {} 
-  // canvas.style.width = windowWidth * pixelRatio;
-  // canvas.style.height = windowHeight * pixelRatio; 
+  // 防止threejs报错，本意是修改canvas的style上的属性，即视图窗口大小
+  canvas.style = {} 
+  canvas.style.width = windowWidth;
+  canvas.style.height = windowHeight; 
 
   initScene(); // 初始化场景
   initCamera(); // 初始化相机
@@ -37,7 +37,7 @@ export default (_canvas) => {
       60,
       canvas.width / canvas.height,
       1,
-      1000
+      200
     );
   }
 
@@ -48,7 +48,6 @@ export default (_canvas) => {
     renderer = new THREE.WebGLRenderer({
       canvas,
     });
-    // renderer.setSize(1000, 1000);
     renderer.setClearColor(0x7fffd4, 1)
   }
 
